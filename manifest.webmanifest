@@ -1,0 +1,15 @@
+{
+  "name": "Camel's Hump Hop",
+  "short_name": "Hump Hop",
+  "description": "An endless vertical jumper. Bounce up the mountain ledge by ledge.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2c5a82",
+  "theme_color": "#2c5a82",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Camel's Hump Hop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2c5a82">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hump Hop">
+<meta name="description" content="Camel's Hump Hop — an endless vertical jumper. Bounce up the mountain ledge by ledge.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bevan&family=Barlow+Semi+Condensed:wght@600;700;800&display=swap">
+<style>
+  :root { --ink: #fff8e8; --pine: #1f5a45; --bark: #5a3c26; --sun: #ffcf5a; --red: #d9382f; --inset-top: 0px; --inset-bot: 0px; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0c1a2a; overscroll-behavior: none; position: fixed; inset: 0; width: 100%; }
+  body { font-family: 'Barlow Semi Condensed', system-ui, -apple-system, 'Segoe UI', sans-serif; font-weight: 700; color: var(--ink); touch-action: none; }
+  #stage { position: absolute; left: 0; top: 0; width: 360px; height: 780px; overflow: hidden; touch-action: none; transform-origin: 0 0; background: #7ec8f4; }
+  #cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .disp { font-family: 'Bevan', 'Rockwell', Georgia, serif; font-weight: 400; }
+
+  #hudbtns { position: absolute; right: 8px; top: calc(8px + var(--inset-top)); display: none; gap: 6px; z-index: 5; }
+  .round { width: 42px; height: 42px; border-radius: 50%; border: 2px solid rgba(255,248,232,.7); background: rgba(31,48,60,.55); color: var(--ink); display: grid; place-items: center; padding: 0; cursor: pointer; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); touch-action: manipulation; }
+  .round:active { transform: scale(.92); }
+  .round svg { width: 56%; height: 56%; fill: currentColor; stroke: currentColor; }
+  .round.off { opacity: .5; }
+  .round.off svg { opacity: .75; }
+
+  .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 10;
+    padding: calc(20px + var(--inset-top)) 20px calc(24px + var(--inset-bot)); }
+  .screen.show { display: flex; animation: fadein .28s ease-out both; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .shade { background: rgba(10,24,40,.58); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+
+  /* logo: a trail-sign plank over bouncing HOP letters */
+  #title { justify-content: flex-start; padding-top: calc(70px + var(--inset-top)); }
+  /* short stages (landscape phones, small screens): smaller logo so nothing collides */
+  #stage.short #title { padding-top: calc(14px + var(--inset-top)); }
+  #stage.short .plank { font-size: 22px; padding: 5px 14px 4px; }
+  #stage.short .hop { font-size: 74px; }
+  #stage.short .tag { margin: 2px 0 10px; font-size: 13px; }
+  #stage.short .btn.big { font-size: 28px; padding: 8px 30px; }
+  #stage.short .best { margin-top: 8px; font-size: 14px; }
+  #stage.short .footrow { bottom: calc(8px + var(--inset-bot)); }
+  #stage.short #over h2 { font-size: 26px; }
+  #stage.short .joke { font-size: 14px; margin: 2px 0 8px; }
+  #stage.short .card b { font-size: 16px; }
+  #stage.short .goalline { font-size: 15px; margin-top: 6px; }
+  #stage.short .unlock { font-size: 14px; margin-top: 6px; padding: 4px 10px; }
+  #stage.short .best { margin-top: 6px; }
+  /* landscape / desktop margins: a quiet mountain backdrop instead of flat navy */
+  body { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 300' preserveAspectRatio='none'><path d='M0 300 L0 190 L140 120 L260 170 L420 60 L520 110 L600 70 L700 150 L860 80 L1000 160 L1200 100 L1200 300Z' fill='%23234a5e'/><path d='M0 300 L0 240 L180 190 L330 230 L470 170 L640 225 L800 180 L960 230 L1200 190 L1200 300Z' fill='%23183a4c'/></svg>") bottom center / 100% 38% no-repeat, linear-gradient(180deg, #0c1a2a 0%, #1b3d55 70%, #2c5a6e 100%); }
+  .logo { transform: rotate(-2.5deg); margin-bottom: 8px; filter: drop-shadow(0 6px 8px rgba(5,15,30,.5)); }
+  .plank { display: inline-block; background: linear-gradient(180deg, #8a5c36, #6a4326); border: 3px solid #3d2615; border-radius: 12px; padding: 8px 18px 6px; font-size: 26px; white-space: nowrap; letter-spacing: 1.5px; color: #fbe9bf; text-shadow: 0 2px 0 #3d2615; position: relative; }
+  .plank::before, .plank::after { content: ''; position: absolute; top: 50%; width: 7px; height: 7px; margin-top: -4px; border-radius: 50%; background: #2e1c0e; box-shadow: inset 0 1px 0 #7a5a3a; }
+  .plank::before { left: 7px; } .plank::after { right: 7px; }
+  .hop { display: flex; justify-content: center; gap: 2px; font-size: 118px; line-height: .95; margin-top: 4px; }
+  .hop span { display: inline-block; background: linear-gradient(180deg, #fff6b8 0%, #ffcf5a 48%, #f08a2c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 6px #6a2f10; paint-order: stroke fill; animation: bob 1.5s ease-in-out infinite; }
+  .hop span:nth-child(2) { animation-delay: .18s; } .hop span:nth-child(3) { animation-delay: .36s; }
+  @keyframes bob { 0%,100% { transform: translateY(0) scale(1,1); } 45% { transform: translateY(-14px) scale(.95,1.06); } 80% { transform: translateY(0) scale(1.08,.9); } }
+  .tag { font-size: 15px; letter-spacing: .5px; color: #fff8e8; text-shadow: 0 2px 4px rgba(5,15,30,.8); margin: 4px 0 22px; font-weight: 700; }
+
+  .btn { font-family: 'Bevan', Georgia, serif; font-size: 22px; color: #3a1c04; background: linear-gradient(180deg, #ffe08c, #f4a43a); border: 3px solid #7a3c0c; border-radius: 16px; padding: 10px 26px; min-width: 170px; cursor: pointer;
+    box-shadow: 0 5px 0 #8d4a12, 0 10px 14px rgba(0,10,30,.45); position: relative; touch-action: manipulation; }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #8d4a12; }
+  .btn.big { font-size: 34px; padding: 12px 38px; min-width: 230px; animation: pulse 1.8s ease-in-out infinite; }
+  .btn.big:active { animation: none; }
+  .btn.big.dly { font-size: 28px; white-space: nowrap; padding: 12px 22px; }
+  .btn.alt { color: var(--ink); background: linear-gradient(180deg, #4e9c7e, #26654f); border-color: #123d2e; box-shadow: 0 5px 0 #123d2e, 0 10px 14px rgba(0,10,30,.45); min-width: 0; font-size: 17px; padding: 8px 16px; }
+  .btn.alt:active { box-shadow: 0 1px 0 #123d2e; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  .row { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+  .stack { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  h2.disp { font-size: 36px; margin: 0 0 6px; color: #fff; text-shadow: 0 3px 0 #1b4a3a, 0 6px 12px rgba(0,10,30,.6); }
+  .joke { font-size: 17px; max-width: 280px; color: #fff3d0; margin: 4px 0 14px; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,10,30,.7); }
+  #over { justify-content: space-between; padding-top: calc(34px + var(--inset-top)); background: linear-gradient(180deg, rgba(10,24,40,.66) 0%, rgba(10,24,40,.4) 52%, rgba(10,24,40,0) 66%); }
+  #over h2 { font-size: 32px; white-space: nowrap; }
+  .otop { display: flex; flex-direction: column; align-items: center; }
+  .obot { padding-bottom: 0; gap: 10px; }
+  .stats { display: flex; gap: 8px; margin-top: 4px; width: 100%; max-width: 330px; }
+  .card { flex: 1; min-width: 0; background: rgba(10,24,40,.55); border: 2px solid rgba(255,248,232,.35); border-radius: 12px; padding: 6px 4px 5px; }
+  .card span { display: block; font-size: 11px; white-space: nowrap; letter-spacing: .8px; color: #cfe3da; }
+  .card b { font-family: 'Bevan', serif; font-weight: 400; font-size: 19px; color: #fff; white-space: nowrap; }
+  .stat { font-size: 17px; color: #e8f3ee; margin: 3px 0; text-transform: uppercase; letter-spacing: .6px; }
+  .stat b { font-family: 'Bevan', serif; font-weight: 400; font-size: 1.7em; color: #fff; margin-left: 8px; text-transform: none; }
+  .badge { display: inline-block; background: linear-gradient(180deg, #ffe08c, #f4a43a); color: #5a2a08; font-family: 'Bevan', serif; font-size: 16px; padding: 3px 12px; border-radius: 20px; margin: 6px 0 2px; animation: pop .6s cubic-bezier(.2,1.6,.4,1) both; transform: rotate(-3deg); }
+  @keyframes pop { from { transform: scale(0) rotate(-12deg); } to { transform: scale(1) rotate(-3deg); } }
+  .best { font-size: 16px; color: #fff3d0; margin-top: 14px; text-shadow: 0 2px 4px rgba(5,15,30,.8); background: rgba(10,24,40,.55); border-radius: 14px; padding: 4px 12px; }
+  .best:empty { display: none; }
+  .best b { color: var(--sun); }
+  .best .goal { font-size: 14px; color: #e8f3ee; }
+  .goalline { font-size: 18px; color: #fff; margin-top: 10px; text-shadow: 0 2px 4px rgba(5,15,30,.8); }
+  .btn.daily { display: flex; flex-direction: column; align-items: center; line-height: 1.05; padding: 8px 22px 7px; min-width: 210px; }
+  .btn.daily small { font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #d6f3e4; margin-top: 3px; }
+  .unlock { margin-top: 10px; background: linear-gradient(180deg, #4e9c7e, #26654f); border: 2px solid #123d2e; border-radius: 12px; padding: 6px 12px; font-size: 16px; color: #fff; animation: pop .6s cubic-bezier(.2,1.6,.4,1) both; }
+  .unlock b { color: #ffe066; }
+  .unlock small { font-size: 13px; color: #d6f3e4; }
+  .nexthat { font-size: 14px; color: #cfe3da; margin-top: 6px; text-shadow: 0 2px 4px rgba(5,15,30,.8); }
+  .goalline b { font-family: 'Bevan', serif; font-weight: 400; color: var(--sun); }
+  .footrow { position: absolute; left: 0; right: 0; bottom: calc(14px + var(--inset-bot)); display: flex; justify-content: center; align-items: center; gap: 10px; }
+  .pill { font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 800; font-size: 15px; letter-spacing: .5px; color: var(--ink); background: rgba(31,48,60,.55); border: 2px solid rgba(255,248,232,.7); border-radius: 22px; height: 42px; padding: 0 16px; cursor: pointer; touch-action: manipulation; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  .pill:active { transform: scale(.95); }
+  .pill .sw { display: inline-block; width: 13px; height: 13px; border-radius: 50%; border: 3px solid #fff; margin-right: 6px; vertical-align: -2px; }
+  .pill.on { background: rgba(255,207,90,.9); color: #4a2a08; border-color: #7a3c0c; }
+  #toast { position: absolute; left: 12px; right: 12px; bottom: calc(80px + var(--inset-bot)); text-align: center; pointer-events: none; z-index: 20; opacity: 0; }
+  #toast span { display: inline-block; background: rgba(15,30,40,.85); color: #fff; padding: 8px 14px; border-radius: 14px; font-size: 15px; border: 2px solid rgba(255,248,232,.5); }
+  #toast.go { animation: toast 2.6s ease-out both; }
+  @keyframes toast { 0% { opacity: 0; transform: translateY(10px); } 10% { opacity: 1; transform: none; } 85% { opacity: 1; } 100% { opacity: 0; } }
+  noscript { position: absolute; top: 40%; width: 100%; text-align: center; color: #fff; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="hudbtns">
+    <button class="round" id="btnSound" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="none"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <button class="round" id="btnPause" aria-label="Pause"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1" stroke="none"/><rect x="14" y="5" width="4" height="14" rx="1" stroke="none"/></svg></button>
+  </div>
+  <div id="toast"><span></span></div>
+
+  <section id="title" class="screen">
+    <div class="logo"><span class="plank disp">CAMEL'S HUMP</span><div class="hop disp"><span>H</span><span>O</span><span>P</span></div></div>
+    <div class="tag">An endless bounce-up-the-mountain jumper</div>
+    <div class="stack"><button class="btn big" id="btnPlay">PLAY</button>
+      <button class="btn alt daily" id="btnDaily">DAILY HIKE<small id="dailySub">same mountain for everyone today</small></button></div>
+    <div class="best" id="titleBest"></div>
+    <div class="footrow">
+      <button class="pill" id="tHat">HAT 1/7</button>
+      <button class="pill" id="tTilt">TILT: OFF</button>
+      <button class="round" id="tSfx" aria-label="Sound effects"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="none"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <button class="round" id="tMusic" aria-label="Music"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" fill="none" stroke-width="2" stroke-linejoin="round"/><circle cx="7" cy="18" r="3" stroke="none"/><circle cx="17" cy="16" r="3" stroke="none"/></svg></button>
+    </div>
+  </section>
+
+  <section id="pause" class="screen shade">
+    <h2 class="disp">PAUSED</h2>
+    <div class="stack">
+      <button class="btn big" id="pResume">RESUME</button>
+      <div class="row" style="margin-top:0">
+        <button class="btn alt" id="pRestart">RESTART</button>
+        <button class="btn alt" id="pTitle">TITLE</button>
+      </div>
+      <div class="row">
+        <button class="pill" id="pTilt">TILT: OFF</button>
+        <button class="round" id="pSfx" aria-label="Sound effects"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="none"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <button class="round" id="pMusic" aria-label="Music"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" fill="none" stroke-width="2" stroke-linejoin="round"/><circle cx="7" cy="18" r="3" stroke="none"/><circle cx="17" cy="16" r="3" stroke="none"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="over" class="screen">
+    <div class="otop">
+      <h2 class="disp">BACK AT THE LOT</h2>
+      <div class="joke" id="ovJoke">Back at the parking lot with everyone else who underestimated the hike.</div>
+      <div class="stats">
+        <div class="card"><span>HEIGHT</span><b id="ovH">0 m</b></div>
+        <div class="card"><span>SCORE</span><b id="ovS">0</b></div>
+        <div class="card"><span>BEST CHAIN</span><b id="ovC">0</b></div>
+      </div>
+      <div class="badge" id="ovBadge" style="display:none">NEW BEST!</div>
+      <div class="goalline" id="ovGoal"></div>
+      <div class="unlock" id="ovUnlock" style="display:none"></div>
+      <div class="nexthat" id="ovNext"></div>
+      <div class="best" id="ovBest"></div>
+    </div>
+    <div class="stack obot">
+      <button class="btn big" id="ovRetry">HOP AGAIN</button>
+      <button class="btn alt" id="ovTitle">TITLE</button>
+    </div>
+  </section>
+</div>
+<noscript>Camel's Hump Hop needs JavaScript.</noscript>
+<script src="world.js"></script>
+<script src="audio.js"></script>
+<script src="art.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
