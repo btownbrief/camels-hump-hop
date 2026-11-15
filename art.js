@@ -6,8 +6,8 @@
 
   // Every key has a code-drawn fallback. To use painted art later: set src: 'assets/<file>.png'.
   const ASSETS = {
-    logo: { src: null }, climber: { src: null }, crow: { src: null }, cone: { src: null },
-    ledge_rock: { src: null }, ledge_branch: { src: null }, ledge_moss: { src: null }, ledge_ice: { src: null },
+    logo: { src: null }, climber: { src: null }, crow: { src: null },
+    ledge_rock: { src: null }, ledge_moss: { src: null }, ledge_ice: { src: null },
     ledge_moving: { src: null }, ledge_spring: { src: null },
     bg_lot: { src: null }, bg_hardwood: { src: null }, bg_birch: { src: null }, bg_spruce: { src: null },
     bg_treeline: { src: null }, bg_summit: { src: null }, bg_clouds: { src: null }, bg_night: { src: null }, bg_aurora: { src: null },
@@ -52,7 +52,7 @@
     return _pal;
   }
 
-  // ---------- background ----------
+  // ---------- background: a two-stop sky, one low-contrast far ridge, at most two faint clouds. Nothing else on the field. ----------
   function ridge(c, baseY, amp, seed, color, hero, H) {
     c.beginPath(); c.moveTo(-10, H + 10);
     for (let x = -10; x <= W + 10; x += 10) {
@@ -66,20 +66,6 @@
     }
     c.lineTo(W + 10, H + 10); c.closePath(); c.fillStyle = color; c.fill();
   }
-  function treeRow(c, baseY, style, color, off, H, size) {
-    c.fillStyle = color;
-    for (let i = -1; i < 14; i++) {
-      const x = i * 29 + hash(i + off) * 14, h = size * (0.7 + hash(i * 3.3 + off) * 0.6);
-      if (style === 1 || style === 2) {             // round-topped hardwood / birch
-        c.beginPath(); c.arc(x, baseY - h * 0.7, h * 0.5, 0, TAU); c.arc(x - h * 0.25, baseY - h * 0.45, h * 0.38, 0, TAU); c.arc(x + h * 0.28, baseY - h * 0.45, h * 0.38, 0, TAU); c.fill();
-        c.fillRect(x - 2, baseY - h * 0.4, 4, h * 0.4 + 40);
-      } else if (style === 0 || style >= 6) {       // low shrubs
-        c.beginPath(); c.arc(x, baseY - 4, h * 0.3, 0, TAU); c.fill(); c.fillRect(x - h * 0.3, baseY - 4, h * 0.6, 60);
-      } else {                                       // spruce triangles
-        c.beginPath(); c.moveTo(x - h * 0.28, baseY); c.lineTo(x, baseY - h * 1.1); c.lineTo(x + h * 0.28, baseY); c.closePath(); c.fill(); c.fillRect(x - h * 0.28, baseY, h * 0.56, 70);
-      }
-    }
-  }
   function cloud(c, x, y, s, col, a) {
     c.fillStyle = rgb(col, a);
     c.beginPath(); c.arc(x, y, 24 * s, 0, TAU); c.arc(x + 26 * s, y + 6 * s, 19 * s, 0, TAU); c.arc(x - 26 * s, y + 8 * s, 17 * s, 0, TAU); c.arc(x + 8 * s, y - 12 * s, 19 * s, 0, TAU);
@@ -88,87 +74,61 @@
   function background(c, o) {
     const H = o.H, m = o.m, alt = o.altPx, pal = palette(m), t = o.t;
     const bgImg = asset(BG_KEYS[pal.style]);
-    if (bgImg) { c.drawImage(bgImg, 0, 0, W, H); } else {
-      const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, rgb(pal.top)); g.addColorStop(1, rgb(pal.bot)); c.fillStyle = g; c.fillRect(0, 0, W, H);
-    }
-    if (m > 2140) {                                  // aurora ribbons fade in around 2,200 m
+    if (bgImg) { c.drawImage(bgImg, 0, 0, W, H); return; }
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, rgb(pal.top)); g.addColorStop(1, rgb(pal.bot)); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    if (m > 2140) {                                  // aurora: two soft drifting glows, top third only, no hard edges
       const ak = clamp((m - 2140) / 90, 0, 1); c.save(); c.globalCompositeOperation = 'lighter';
-      for (let b = 0; b < 3; b++) {
-        const base = 90 + b * 70, cols = [[63, 214, 160], [120, 90, 230], [80, 200, 255]][b], g = c.createLinearGradient(0, base - 60, 0, base + 120);
-        g.addColorStop(0, rgb(cols, 0)); g.addColorStop(0.35, rgb(cols, 0.42 * ak)); g.addColorStop(1, rgb(cols, 0));
-        c.fillStyle = g; c.beginPath(); c.moveTo(-10, base + 140);
-        for (let x = -10; x <= W + 10; x += 12) c.lineTo(x, base + Math.sin(x * 0.012 + t * 0.4 + b * 2) * 26 + Math.sin(x * 0.031 - t * 0.7 + b) * 10);
-        for (let x = W + 10; x >= -10; x -= 12) c.lineTo(x, base + 120 + Math.sin(x * 0.01 + t * 0.3 + b) * 20);
-        c.closePath(); c.fill();
+      for (let b = 0; b < 2; b++) {
+        const cols = [[63, 214, 160], [120, 90, 230]][b], cx = W * (0.3 + 0.4 * b) + Math.sin(t * 0.15 + b * 2) * 60, cy = H * 0.12;
+        c.save(); c.translate(cx, cy); c.scale(2.4, 1);
+        const gg = c.createRadialGradient(0, 0, 0, 0, 0, H * 0.18);
+        gg.addColorStop(0, rgb(cols, 0.22 * ak)); gg.addColorStop(1, rgb(cols, 0));
+        c.fillStyle = gg; c.fillRect(-H * 0.18, -H * 0.18, H * 0.36, H * 0.36); c.restore();
       }
       c.restore();
     }
-    if (pal.star > 0.01) {                          // stars + moon
+    if (pal.star > 0.01) {                          // faint, still stars: part of the sky, not things to look at
       c.fillStyle = '#fff';
-      for (let i = 0; i < 60; i++) {
-        const x = hash(i) * W, y = ((hash(i + 50) * H * 1.4 + alt * 0.04 * (0.5 + hash(i + 9))) % (H + 20));
-        c.globalAlpha = pal.star * (0.35 + 0.65 * Math.abs(Math.sin(t * (0.8 + hash(i + 3)) + i)));
-        const s = 0.8 + hash(i + 7) * 1.4; c.fillRect(x, y, s, s);
+      for (let i = 0; i < 40; i++) {
+        const x = hash(i) * W, y = ((hash(i + 50) * H * 1.4 + alt * 0.03 * (0.5 + hash(i + 9))) % (H + 20));
+        c.globalAlpha = pal.star * (0.18 + 0.22 * hash(i + 3));
+        const s = 0.8 + hash(i + 7) * 0.9; c.fillRect(x, y, s, s);
       }
-      c.globalAlpha = pal.star; const mx = 282, my = 118 + alt * 0.01 % 40;
-      c.fillStyle = '#fff6d8'; c.beginPath(); c.arc(mx, my, 24, 0, TAU); c.fill();
-      c.fillStyle = rgb(pal.top); c.beginPath(); c.arc(mx + 9, my - 5, 21, 0, TAU); c.fill(); c.globalAlpha = 1;
-    } else if (pal.cloud < 0.9) {                   // sun glow in the day zones
-      const sg = c.createRadialGradient(80, 110, 6, 80, 110, 150); sg.addColorStop(0, rgb(pal.haze, 0.8)); sg.addColorStop(1, rgb(pal.haze, 0)); c.fillStyle = sg; c.fillRect(0, 0, W, 300);
-      // slow sun rays fanning down from the glow
-      c.save(); c.translate(80, 110); c.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 6; i++) {
-        const a = 0.35 + i * 0.32 + Math.sin(t * 0.15 + i * 1.7) * 0.06, w = 0.05 + hash(i + 40) * 0.05, len = H * 1.25;
-        const rg = c.createLinearGradient(0, 0, Math.cos(a) * len, Math.sin(a) * len); rg.addColorStop(0, rgb(pal.haze, 0.07 * (1 - pal.cloud * 0.5))); rg.addColorStop(1, rgb(pal.haze, 0));
-        c.fillStyle = rg; c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(a - w) * len, Math.sin(a - w) * len); c.lineTo(Math.cos(a + w) * len, Math.sin(a + w) * len); c.closePath(); c.fill();
-      }
-      c.restore();
-    }
-    // wispy / puffy clouds at three depths, tiling vertically
-    const cl = pal.cloud;
-    for (let L = 0; L < 3; L++) {
-      const pk = [0.1, 0.22, 0.42][L], sc = [0.6, 0.95, 1.4][L], span = [300, 420, 560][L], a = (cl * [0.5, 0.7, 0.9][L]);
-      if (a < 0.02) continue;
-      const sh = alt * pk, base = sh % span, idx0 = Math.floor(sh / span);
-      for (let j = -1; j * span - base < H + 60; j++) {
-        const id = j - idx0 + L * 31, y = j * span + base + hash(id) * 80, x = hash(id + 9) * (W + 60) - 30;
-        cloud(c, x, y, sc, pal.star > 0.5 ? mix(pal.bot, [140, 150, 230], 0.5) : mix(pal.haze, [255, 255, 255], 0.5), a);
-      }
-    }
-    // parallax mountains + tree line sink as you climb
-    const mAlpha = clamp(1 - (m - 880) / 120, 0, 1) * (pal.star > 0.5 ? 1 - pal.star * 0.5 : 1);
-    if (mAlpha > 0.01) {
-      c.globalAlpha = mAlpha;
-      const baseFar = H * 0.72 + alt * 0.045, baseMid = H * 0.8 + alt * 0.09, baseNear = H * 0.9 + alt * 0.17;
-      if (baseFar - 260 < H) ridge(c, baseFar, 170, 1.7, rgb(pal.far), true, H);
-      if (baseMid - 200 < H) ridge(c, baseMid, 150, 4.1, rgb(pal.mid), false, H);
-      if (baseNear - 120 < H) treeRow(c, baseNear, pal.style, rgb(pal.near), 5, H, 70);
       c.globalAlpha = 1;
     }
-    // haze at the bottom for depth
-    const hz = c.createLinearGradient(0, H * 0.6, 0, H); hz.addColorStop(0, rgb(pal.haze, 0)); hz.addColorStop(1, rgb(pal.haze, pal.star > 0.5 ? 0.1 : 0.28)); c.fillStyle = hz; c.fillRect(0, H * 0.6, W, H * 0.4);
-  }
-
-  // world-fixed tree trunks along the climb (forest zones)
-  const TRX = [12, 52, 120, 205, 262, 318, 350];
-  function trunks(c, o) {
-    const pal = palette(o.m), tr = pal.trunk; if (tr < 0.02) return;
-    const st = pal.style, H = o.H;
-    for (let i = 0; i < TRX.length; i++) {
-      const far = i % 2 === 0, pf = far ? 0.8 : 1, w = (far ? 9 : 15) + hash(i) * 5, x = TRX[i] + hash(i + 4) * 8;
-      const scroll = o.camTop * pf, a = tr * (far ? 0.45 : 0.62);
-      const base = st === 2 ? [236, 232, 220] : st === 3 ? [58, 44, 36] : st === 4 ? [78, 66, 56] : [92, 62, 42];
-      const g = c.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
-      g.addColorStop(0, rgb(shade(base, 0.7), a)); g.addColorStop(0.4, rgb(shade(base, 1.1), a)); g.addColorStop(1, rgb(shade(base, 0.6), a));
-      c.fillStyle = g; c.fillRect(x - w / 2, 0, w, H);
-      const k0 = Math.floor(scroll / 64);
-      for (let k = k0; k < k0 + H / 64 + 2; k++) {
-        const y = k * 64 - scroll + hash(k * 7 + i) * 40, hh = hash(k + i * 3);
-        if (st === 2) { c.fillStyle = `rgba(30,30,30,${a * 0.85})`; c.fillRect(x - w / 2, y, w * (0.4 + hh * 0.5), 3 + hh * 3); }
-        else if (st === 3 || st === 4) { c.fillStyle = rgb(shade(base, 0.5), a); c.fillRect(x - w / 2 - 6, y, w + 12, 2); }
-        else { c.fillStyle = rgb(shade(base, 0.55), a); c.beginPath(); c.ellipse(x + (hh - .5) * w * .5, y, 2.5, 4.5, 0, 0, TAU); c.fill(); }
+    // at most two faint clouds, drifting past slowly
+    const cl = pal.cloud;
+    if (cl > 0.02) {
+      const span = 520, sh = alt * 0.12, base = sh % span, idx0 = Math.floor(sh / span), ccol = pal.star > 0.5 ? mix(pal.bot, [150, 160, 230], 0.4) : mix(pal.bot, [255, 255, 255], 0.6);
+      let n = 0;
+      for (let j = -1; j * span - base < H + 60 && n < 2; j++) {
+        const id = j - idx0, y = j * span + base + hash(id) * 120, x = hash(id + 9) * (W + 60) - 30;
+        if (y < -60 || y > H + 60) continue;
+        cloud(c, x, y, 1.1, ccol, Math.min(0.32, cl * 0.32)); n++;
       }
     }
+    // one far ridge, close to the sky colour, sinking as you climb
+    const mAlpha = clamp(1 - (m - 760) / 160, 0, 1);
+    if (mAlpha > 0.01) {
+      const baseFar = H * 0.86 + alt * 0.06;
+      if (baseFar - 200 < H) { c.globalAlpha = mAlpha; ridge(c, baseFar, 170, 1.7, rgb(mix(pal.bot, pal.far, 0.42)), true, H); c.globalAlpha = 1; }
+    }
+  }
+  // the weather line: a soft band of mist along the bottom edge once it starts creeping
+  function weather(c, o) {
+    const pal = palette(o.m), H = o.H, k = o.k, h = 36 + 14 * (o.low || 0);
+    if (k <= 0.01) return;
+    const col = pal.star > 0.5 ? pal.haze : mix(pal.haze, pal.top, 0.38);          // light skies: tint it so the mist still reads
+    const g = c.createLinearGradient(0, H - h, 0, H);
+    g.addColorStop(0, rgb(col, 0)); g.addColorStop(0.55, rgb(col, 0.45 * k)); g.addColorStop(1, rgb(col, 0.85 * k));
+    c.fillStyle = g; c.fillRect(0, H - h, W, h);
+  }
+  // HUD band: a zone-coloured scrim so ledges dim as they slide under the height readout and buttons
+  function scrim(c, o) {
+    const pal = palette(o.m), y1 = o.top + 96;
+    const g = c.createLinearGradient(0, 0, 0, y1);
+    g.addColorStop(0, rgb(pal.top, 0.96)); g.addColorStop(Math.max(0.01, (y1 - 40) / y1), rgb(pal.top, 0.7)); g.addColorStop(1, rgb(pal.top, 0));
+    c.fillStyle = g; c.fillRect(0, 0, W, y1);
   }
 
   // ---------- parking-lot start scene (world y = 0 is the top of the curb) ----------
@@ -218,95 +178,55 @@
     c.restore();
   }
 
-  // ---------- ledges: cached sprites (2x) per type + skin ----------
+  // ---------- ledges: one silhouette family, behaviour shown by colour only. Cached sprites per type + width. ----------
   const SK = 2, cache = {};
   const LEDGE_W = { start: 170, rock: 76, branch: 86, ice: 76, moving: 70, moss: 66, spring: 62 };
-  function skinFor(type, z) {
-    if (type === 'rock' || type === 'start') return z === 0 ? 'curb' : z >= 6 ? 'sky' : z === 5 ? 'summit' : z === 4 ? 'alpine' : 'forest';
-    if (type === 'branch') return z <= 1 ? 'hard' : z === 2 ? 'birch' : 'spruce';
-    return 'x';
+  const LOOK = {
+    rock: ['#c3c7cc', '#868c94'], branch: ['#c3c7cc', '#868c94'], moving: ['#c3c7cc', '#868c94'],
+    moss: ['#86c264', '#3f7f37'], ice: ['#eefaff', '#93cde6'], spring: ['#a58cec', '#6a4fc0'],      // spring: violet, a colour nothing else on the field uses
+  };
+  const LH = 12, OUTL = 'rgba(16,22,32,.92)';
+  function slab(c, w, top, bot) {
+    const g = c.createLinearGradient(0, 0, 0, LH); g.addColorStop(0, top); g.addColorStop(1, bot);
+    rr(c, -w / 2, 0, w, LH, 5); c.fillStyle = g; c.fill(); c.lineWidth = 2; c.strokeStyle = OUTL; c.stroke();
+    c.fillStyle = 'rgba(255,255,255,.5)'; rr(c, -w / 2 + 5, 2, w - 10, 2.2, 1.1); c.fill();
   }
-  function dot(c, x, y, r, col) { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
-  function drawRock(c, w, skin) {
-    const pal = { curb: ['#b9bdc4', '#8d929b', '#5f636b'], forest: ['#a9aeb2', '#7d8388', '#4e5459'], alpine: ['#c2c7cb', '#98a0a6', '#6a7278'], summit: ['#d3bfb6', '#a8938c', '#74625d'], sky: ['#e6ecff', '#aab6e6', '#6f7bb8'] }[skin];
-    const h = 17;
-    const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, pal[0]); g.addColorStop(0.35, pal[1]); g.addColorStop(1, pal[2]);
-    c.beginPath(); c.moveTo(-w / 2 + 6, 0); c.lineTo(w / 2 - 6, 0); c.quadraticCurveTo(w / 2 + 2, 2, w / 2 - 3, h - 3); c.quadraticCurveTo(w / 2 - 12, h + 2, w / 2 - 24, h - 1); c.lineTo(-w / 2 + 26, h + 1); c.quadraticCurveTo(-w / 2 + 4, h, -w / 2 + 2, h - 5); c.quadraticCurveTo(-w / 2 - 3, 3, -w / 2 + 6, 0); c.closePath();
-    c.fillStyle = g; c.fill(); c.strokeStyle = 'rgba(30,34,40,.55)'; c.lineWidth = 1.6; c.stroke();
-    c.fillStyle = 'rgba(255,255,255,.55)'; rr(c, -w / 2 + 9, 0.5, w - 18, 3, 1.5); c.fill();
-    if (skin === 'curb') {                                       // painted concrete wheel-stop
-      c.save(); c.clip(); c.fillStyle = '#e9c93a'; for (let x = -w / 2; x < w / 2; x += 18) { c.beginPath(); c.moveTo(x, 4); c.lineTo(x + 9, 4); c.lineTo(x + 3, 14); c.lineTo(x - 6, 14); c.fill(); } c.restore();
-    } else {
-      c.strokeStyle = 'rgba(30,34,40,.35)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-w * .18, 5); c.lineTo(-w * .1, 11); c.lineTo(-w * .16, 15); c.moveTo(w * .15, 4); c.lineTo(w * .22, 9); c.stroke();
-      if (skin === 'forest') { dot(c, -w * .3, 1, 4, '#5b8f4a'); dot(c, -w * .22, 0, 3, '#6fa55a'); dot(c, w * .28, 1, 3, '#5b8f4a'); }
-      if (skin === 'alpine') { dot(c, w * .1, 8, 2.6, '#d6c066'); dot(c, w * .17, 11, 2, '#c9b25a'); }
-      if (skin === 'sky') { c.fillStyle = 'rgba(255,255,255,.6)'; dot(c, -w * .25, 9, 1.4, '#fff'); dot(c, w * .2, 6, 1.2, '#fff'); }
+  function drawLedge(c, type, w) {
+    if (type === 'start') {                                     // painted concrete wheel-stop on the trailhead lot
+      slab(c, w, '#c3c7cc', '#868c94');
+      c.save(); rr(c, -w / 2, 0, w, LH, 5); c.clip(); c.fillStyle = '#e9c93a'; for (let x = -w / 2; x < w / 2; x += 18) { c.beginPath(); c.moveTo(x, 4); c.lineTo(x + 9, 4); c.lineTo(x + 3, 12); c.lineTo(x - 6, 12); c.fill(); } c.restore();
+      return;
+    }
+    const L = LOOK[type] || LOOK.rock;
+    slab(c, w, L[0], L[1]);
+    if (type === 'moss') {                                      // a visible crack: this one breaks
+      c.strokeStyle = 'rgba(20,40,18,.9)'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-2, 0.5); c.lineTo(2, 4); c.lineTo(-3, 7.5); c.lineTo(1, 11.5); c.stroke();
+    } else if (type === 'moving') {                             // yellow end caps: this one slides
+      c.fillStyle = '#f2c84b'; c.save(); rr(c, -w / 2, 0, w, LH, 5); c.clip(); c.fillRect(-w / 2, 0, 7, LH); c.fillRect(w / 2 - 7, 0, 7, LH); c.restore();
+      rr(c, -w / 2, 0, w, LH, 5); c.lineWidth = 2; c.strokeStyle = OUTL; c.stroke();
+    } else if (type === 'spring') {                             // springy bough: light up-chevrons
+      c.strokeStyle = 'rgba(246,240,255,.95)'; c.lineWidth = 1.8; c.lineJoin = 'round';
+      for (const x of [-w * 0.25, 0, w * 0.25]) { c.beginPath(); c.moveTo(x - 4, 9); c.lineTo(x, 5); c.lineTo(x + 4, 9); c.stroke(); }
     }
   }
-  function drawBranch(c, w, skin) {
-    const base = skin === 'birch' ? ['#f4f1e8', '#c9c4b4', '#8f897a'] : skin === 'spruce' ? ['#6a4a35', '#4d3526', '#32221a'] : ['#9a6b45', '#74502f', '#4b331e'];
-    const h = 12, g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, base[0]); g.addColorStop(.5, base[1]); g.addColorStop(1, base[2]);
-    rr(c, -w / 2, 0, w, h, 6); c.fillStyle = g; c.fill(); c.strokeStyle = 'rgba(25,20,15,.6)'; c.lineWidth = 1.5; c.stroke();
-    c.fillStyle = 'rgba(255,255,255,.4)'; rr(c, -w / 2 + 6, 1, w - 12, 2.4, 1); c.fill();
-    if (skin === 'birch') { c.fillStyle = '#26262a'; for (let i = 0; i < 5; i++) c.fillRect(-w / 2 + 10 + i * 16, 3 + (i % 2) * 3, 7, 2.4); }
-    if (skin === 'hard') { for (let i = 0; i < 3; i++) { const lx = -w * .3 + i * w * .3; dot(c, lx, -1, 5, i % 2 ? '#d9822b' : '#b8451e'); dot(c, lx + 4, 1, 3.4, '#e8a43a'); } }
-    if (skin === 'spruce') { c.fillStyle = '#2f5e45'; for (let i = 0; i < 6; i++) { const lx = -w / 2 + 8 + i * 14; c.beginPath(); c.moveTo(lx - 7, 2); c.lineTo(lx, -9); c.lineTo(lx + 7, 2); c.closePath(); c.fill(); } c.fillStyle = '#3f7a58'; for (let i = 0; i < 5; i++) { const lx = -w / 2 + 15 + i * 14; c.beginPath(); c.moveTo(lx - 5, 0); c.lineTo(lx, -7); c.lineTo(lx + 5, 0); c.closePath(); c.fill(); } }
-    c.fillStyle = skin === 'birch' ? '#8bb36a' : '#5c8f46'; dot(c, w / 2 - 5, -2, 3.4, c.fillStyle);
-  }
-  function drawMoss(c, w) {
-    drawRock(c, w, 'forest');
-    c.fillStyle = '#4f8f3e'; c.beginPath(); c.moveTo(-w / 2 + 3, 2); for (let x = -w / 2 + 3; x <= w / 2 - 3; x += 6) c.lineTo(x + 3, -3 - ((x * 7) & 3)); c.lineTo(w / 2 - 3, 2); c.lineTo(w / 2 - 6, 8); c.lineTo(-w / 2 + 6, 8); c.closePath(); c.fill();
-    c.fillStyle = '#74b857'; for (let x = -w / 2 + 8; x < w / 2 - 6; x += 9) dot(c, x, -2, 2.3, '#7bc05b');
-    c.strokeStyle = 'rgba(20,40,20,.55)'; c.lineWidth = 1.3; c.beginPath(); c.moveTo(-6, 8); c.lineTo(-2, 12); c.lineTo(-7, 16); c.moveTo(11, 6); c.lineTo(15, 11); c.stroke();
-  }
-  function drawIce(c, w) {
-    const g = c.createLinearGradient(0, 0, 0, 16); g.addColorStop(0, '#f2fdff'); g.addColorStop(.5, '#b9e8f7'); g.addColorStop(1, '#7cc3e6');
-    rr(c, -w / 2, 0, w, 15, 7); c.fillStyle = g; c.fill(); c.strokeStyle = '#3b88b3'; c.lineWidth = 1.6; c.stroke();
-    c.fillStyle = 'rgba(255,255,255,.85)'; rr(c, -w / 2 + 7, 1.5, w - 24, 3, 1.5); c.fill(); c.fillRect(w / 2 - 14, 5, 4, 2);
-    c.fillStyle = 'rgba(190,235,250,.9)'; for (const x of [-w * .28, -w * .05, w * .25]) { c.beginPath(); c.moveTo(x - 4, 13); c.lineTo(x, 13 + 8 + Math.abs(x) % 6); c.lineTo(x + 4, 13); c.fill(); }
-  }
-  function drawMoving(c, w) {
-    drawRock(c, w, 'forest');
-    c.fillStyle = '#e9b13a'; c.strokeStyle = '#6a4a12'; c.lineWidth = 1;
-    for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * (w / 2 - 12), 5); c.lineTo(s * (w / 2 - 22), 9); c.lineTo(s * (w / 2 - 12), 13); c.closePath(); c.fill(); c.stroke(); }
-    c.fillStyle = '#4d3a1f'; rr(c, -w / 2 + 3, 15, w - 6, 4, 2); c.fill();
-  }
-  function drawSpring(c, w) {
-    const h = 10;
-    c.strokeStyle = '#3a2a1c'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(-w / 2 + 2, 6); c.quadraticCurveTo(0, 10, w / 2 - 2, 6); c.stroke();
-    c.strokeStyle = '#7a5434'; c.lineWidth = 3; c.stroke();
-    c.lineCap = 'butt';
-    const cols = ['#1f6b44', '#2d8a58', '#3fa86c'];
-    for (let r = 0; r < 3; r++) for (let i = -3; i <= 3; i++) {
-      const x = i * (w / 7.2), y = 4 - r * 3 + Math.abs(i) * 1.2;
-      c.fillStyle = cols[r]; c.beginPath(); c.moveTo(x - 7, y + 4); c.lineTo(x + (r % 2 ? 2 : -2), y - 12 + r * 2); c.lineTo(x + 7, y + 4); c.closePath(); c.fill();
-    }
-    dot(c, -w * .26, 9, 4, '#8a5a30'); dot(c, w * .22, 10, 3.6, '#8a5a30');
-    c.fillStyle = '#d1f0dc'; c.font = '900 9px sans-serif'; c.textAlign = 'center'; c.fillText('▲', 0, -3); c.textAlign = 'start';
-  }
-  function ledgeSprite(type, skin) {
-    const key = type + '|' + skin; if (cache[key]) return cache[key];
-    const w = LEDGE_W[type], padX = 14, up = 30, down = 34, cw = (w + padX * 2) * SK, ch = (up + down) * SK;
+  function ledgeSprite(type, w) {
+    w = Math.round(w); const key = type + '|' + w; if (cache[key]) return cache[key];
+    const padX = 4, up = 4, down = 6, cw = (w + padX * 2) * SK, ch = (LH + up + down) * SK;
     const cv = document.createElement('canvas'); cv.width = Math.ceil(cw); cv.height = Math.ceil(ch);
     const c = cv.getContext('2d'); c.scale(SK, SK); c.translate(w / 2 + padX, up);
-    c.shadowColor = 'rgba(0,0,0,.22)'; c.shadowBlur = 0;
-    if (type === 'rock' || type === 'start') drawRock(c, w, skin);
-    else if (type === 'branch') drawBranch(c, w, skin);
-    else if (type === 'moss') drawMoss(c, w);
-    else if (type === 'ice') drawIce(c, w);
-    else if (type === 'moving') drawMoving(c, w);
-    else if (type === 'spring') drawSpring(c, w);
+    drawLedge(c, type, w);
     return (cache[key] = { cv, ox: w / 2 + padX, oy: up, w: cw / SK, h: ch / SK });
   }
-  function ledge(c, l, t, z) {
-    const skin = skinFor(l.type, z), spr = ledgeSprite(l.type, skin);
-    const a = asset('ledge_' + (l.type === 'start' ? 'rock' : l.type));
-    let wob = l.wob, sy = 1, dy = 0, sx = 1, rot = 0, alpha = 1, shake = 0;
-    if (wob > 0) { dy = Math.sin((1 - wob) * 18) * wob * 4; if (l.type === 'spring') { sy = 1 - Math.sin((1 - wob) * 14) * wob * 0.25; } }
-    if (l.state === 'crumble') { shake = Math.sin(t * 90) * 1.8; }
+  function ledge(c, l, t, fade) {           // fade: 0..1, so ledges vanish before they slide under the HUD band
+    const w = l.type === 'start' ? LEDGE_W.start : l.w, spr = ledgeSprite(l.type, w);
+    const a = asset('ledge_' + (l.type === 'start' ? 'rock' : l.type === 'branch' ? 'rock' : l.type));
+    let wob = l.wob, sy = 1, dy = 0, rot = 0, alpha = 1, shake = 0;
+    if (wob > 0) { dy = Math.sin((1 - wob) * 18) * wob * 3; if (l.type === 'spring') sy = 1 - Math.sin((1 - wob) * 14) * wob * 0.25; }
+    if (l.state === 'crumble') shake = Math.sin(t * 90) * 1.8;
     if (l.state === 'fall') { rot = (l.id % 2 ? 1 : -1) * Math.min(1, l.vy / 600); alpha = clamp(1 - (l.vy / 900), 0.2, 1); }
-    c.save(); c.globalAlpha = alpha; c.translate(l.x + shake, l.y + dy); if (rot) c.rotate(rot); c.scale(sx, sy);
-    if (a) c.drawImage(a, -l.w / 2 - 14, -30, l.w + 28, 64); else c.drawImage(spr.cv, -spr.ox, -spr.oy, spr.w, spr.h);
+    if (fade != null) { alpha *= fade; if (alpha <= 0.01) return; }
+    c.save(); c.globalAlpha = alpha; c.translate(l.x + shake, l.y + dy); if (rot) c.rotate(rot); if (sy !== 1) c.scale(1, sy);
+    if (a) c.drawImage(a, -w / 2 - 4, -4, w + 8, LH + 10); else c.drawImage(spr.cv, -spr.ox, -spr.oy, spr.w, spr.h);
     c.restore();
   }
 
@@ -367,12 +287,13 @@
   }
 
   // ---------- hazards ----------
-  function crow(c, x, y, dir, t) {
+  function crow(c, x, y, dir, t, pale) {
     const a = asset('crow');
     c.save(); c.translate(x, y); c.scale(dir, 1);
     if (a) { c.drawImage(a, -22, -16, 44, 32); c.restore(); return; }
-    const flap = Math.sin(t * 16), OUT = '#0d0d12';
-    c.fillStyle = '#23232e'; c.strokeStyle = OUT; c.lineWidth = 1.5;
+    const flap = Math.sin(t * 16), OUT = pale ? '#e9eef7' : '#0d0d12';
+    if (pale) c.lineWidth = 2;
+    c.fillStyle = '#23232e'; c.strokeStyle = OUT; c.lineWidth = pale ? 2 : 1.5;
     c.beginPath(); c.ellipse(0, 0, 14, 8, 0, 0, TAU); c.fill(); c.stroke();                   // body
     c.beginPath(); c.moveTo(-12, -1); c.lineTo(-24, -5 + flap * 2); c.lineTo(-22, 4); c.closePath(); c.fill(); c.stroke();    // tail
     c.beginPath(); c.arc(12, -4, 6, 0, TAU); c.fill(); c.stroke();                            // head
@@ -381,52 +302,5 @@
     c.fillStyle = '#2f2f3d'; c.beginPath(); c.moveTo(-4, -2); c.quadraticCurveTo(-2, -22 * flap - 4, 10, -26 * flap - 2); c.quadraticCurveTo(6, -2, 4, 0); c.closePath(); c.fill(); c.stroke();   // wing
     c.restore();
   }
-  function cone(c, x, y, rot) {
-    const a = asset('cone');
-    c.save(); c.translate(x, y); c.rotate(rot);
-    if (a) { c.drawImage(a, -10, -16, 20, 32); c.restore(); return; }
-    const g = c.createLinearGradient(-9, 0, 9, 0); g.addColorStop(0, '#6b4524'); g.addColorStop(.5, '#a8713c'); g.addColorStop(1, '#5a3a1e');
-    c.fillStyle = g; c.strokeStyle = '#2d1c0e'; c.lineWidth = 1.5;
-    c.beginPath(); c.moveTo(0, -15); c.quadraticCurveTo(11, -4, 6, 11); c.quadraticCurveTo(0, 16, -6, 11); c.quadraticCurveTo(-11, -4, 0, -15); c.closePath(); c.fill(); c.stroke();
-    c.strokeStyle = 'rgba(40,24,10,.6)'; c.lineWidth = 1;
-    for (let r = 0; r < 4; r++) { c.beginPath(); c.moveTo(-6 + r, -8 + r * 5); c.quadraticCurveTo(0, -4 + r * 5, 6 - r, -8 + r * 5); c.stroke(); }
-    c.fillStyle = '#2f6e45'; c.beginPath(); c.moveTo(-1, -15); c.lineTo(-7, -21); c.lineTo(2, -18); c.lineTo(8, -22); c.lineTo(1, -14); c.fill();
-    c.restore();
-  }
-  function updraft(c, u, t, camTop, H) {
-    const x0 = u.x - u.w / 2, y0 = u.y - u.h / 2;
-    const g = c.createLinearGradient(0, y0, 0, y0 + u.h); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(235,250,255,.3)'); g.addColorStop(1, 'rgba(255,255,255,.1)');
-    c.fillStyle = g; rr(c, x0, y0, u.w, u.h, 30); c.fill();
-    c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 2; c.lineCap = 'round';
-    for (let i = 0; i < 7; i++) {
-      const f = ((t * 0.9 + i / 7) % 1), yy = y0 + u.h - f * u.h, xx = x0 + 10 + ((i * 37) % (u.w - 20)) + Math.sin(f * 9 + i) * 5;
-      c.globalAlpha = Math.sin(f * Math.PI) * 0.9; c.beginPath(); c.moveTo(xx, yy); c.lineTo(xx + Math.sin(f * 9 + i) * 3, yy - 20); c.stroke();
-    }
-    c.globalAlpha = 1; c.lineCap = 'butt';
-  }
-
-  // ---------- foreground: dark leaves / boughs / rock / cloud wisps poking in from the screen edges, scrolling faster than the world ----------
-  function foreground(c, o) {
-    const pal = palette(o.m), st = pal.style, H = o.H, k = 1.35, sc = -o.camTop * k, span = 380;
-    const col = st >= 6 ? rgb(mix(pal.haze, [255, 255, 255], .4), st >= 7 ? 0.18 : 0.5) : rgb(shade(pal.near, 0.5), 0.6);
-    const j0 = Math.floor((sc - H) / span);
-    for (let j = j0; j <= j0 + Math.ceil(H / span) + 2; j++) {
-      if (hash(j * 3.1) < 0.3) continue;
-      const y = sc - j * span - hash(j) * 140, side = hash(j + 7) < .5 ? -1 : 1, x = side < 0 ? 0 : W;
-      if (y < -120 || y > H + 120) continue;
-      c.save(); c.translate(x, y); c.scale(-side, 1); c.fillStyle = col;      // drawn as if on the left edge, mirrored on the right
-      const s = 0.8 + hash(j + 2) * 0.5;
-      if (st === 1 || st === 2) {                     // a leafy twig reaching in from the edge
-        c.strokeStyle = col; c.lineWidth = 3.2 * s; c.lineCap = 'round'; c.beginPath(); c.moveTo(-4, 6 * s); c.quadraticCurveTo(18 * s, -2 * s, 36 * s, -22 * s); c.stroke();
-        for (let i = 0; i < 7; i++) { const u = i / 6, lx = -2 + u * 36 * s, ly = 6 * s - u * 26 * s, sd = i % 2 ? 1 : -1;
-          c.save(); c.translate(lx, ly); c.rotate(-0.6 + sd * 0.9); c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(7 * s, -6 * s, 16 * s, 0); c.quadraticCurveTo(7 * s, 6 * s, 0, 0); c.fill(); c.restore(); }
-      }
-      else if (st === 3) { for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(-2, -40 * s + i * 22 * s); c.lineTo(30 * s - i * 2, -28 * s + i * 22 * s); c.lineTo(-2, -16 * s + i * 22 * s); c.closePath(); c.fill(); } }
-      else if (st === 4 || st === 5) { c.beginPath(); c.moveTo(-4, -60 * s); c.lineTo(16 * s, -38 * s); c.lineTo(26 * s, -6 * s); c.lineTo(14 * s, 30 * s); c.lineTo(22 * s, 58 * s); c.lineTo(-4, 70 * s); c.closePath(); c.fill(); }
-      else if (st >= 6) { c.beginPath(); c.arc(0, 0, 34 * s, 0, TAU); c.arc(10 * s, 30 * s, 26 * s, 0, TAU); c.arc(4 * s, -30 * s, 22 * s, 0, TAU); c.fill(); }
-      c.restore();
-    }
-  }
-
-  window.Art = { W, ASSETS, foreground, palette, zoneIdx, background, trunks, ground, ledge, climber, crow, cone, updraft, hiker, hash, lerp, clamp, sstep, rr, rgb, mix, ledgeSprite, skinFor };
+  window.Art = { W, ASSETS, palette, zoneIdx, background, weather, scrim, ground, ledge, climber, crow, hiker, hash, lerp, clamp, sstep, rr, rgb, mix, ledgeSprite };
 })();

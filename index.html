@@ -47,11 +47,23 @@
   #stage.short .tag { margin: 2px 0 10px; font-size: 13px; }
   #stage.short .btn.big { font-size: 28px; padding: 8px 30px; }
   #stage.short .best { margin-top: 8px; font-size: 14px; }
+  #stage.short #title .best { bottom: calc(60px + var(--inset-bot)); margin: 0; }
   #stage.short .footrow { bottom: calc(8px + var(--inset-bot)); }
   #stage.short #over h2 { font-size: 26px; }
-  #stage.short .joke { font-size: 14px; margin: 2px 0 8px; }
   #stage.short .card b { font-size: 16px; }
   #stage.short .goalline { font-size: 15px; margin-top: 6px; }
+  #stage.short .trail { height: 176px; }
+  #stage.short #over { padding-top: calc(14px + var(--inset-top)); }
+  #stage.short #over h2 { margin-bottom: 4px; }
+  #stage.short .ovcol .card { padding: 2px 8px 3px; }
+  #stage.short .ovcol .card span { font-size: 10px; }
+  #stage.short .ovcol .card b { font-size: 17px; }
+  #stage.short .ovcol .card small { font-size: 11px; }
+  #stage.short .ovcol .stats { gap: 4px; }
+  #stage.short .ovcol .badge { font-size: 13px; margin-top: 5px; }
+  #stage.short .ovcol .unlock { font-size: 12px; margin-top: 5px; padding: 3px 6px; }
+  #stage.short #over .best { font-size: 13px; margin-top: 4px; }
+  #stage.short #over .goalline { font-size: 15px; margin-top: 4px; }
   #stage.short .unlock { font-size: 14px; margin-top: 6px; padding: 4px 10px; }
   #stage.short .best { margin-top: 6px; }
   /* landscape / desktop margins: a quiet mountain backdrop instead of flat navy */
@@ -60,7 +72,7 @@
   .plank { display: inline-block; background: linear-gradient(180deg, #8a5c36, #6a4326); border: 3px solid #3d2615; border-radius: 12px; padding: 8px 18px 6px; font-size: 26px; white-space: nowrap; letter-spacing: 1.5px; color: #fbe9bf; text-shadow: 0 2px 0 #3d2615; position: relative; }
   .plank::before, .plank::after { content: ''; position: absolute; top: 50%; width: 7px; height: 7px; margin-top: -4px; border-radius: 50%; background: #2e1c0e; box-shadow: inset 0 1px 0 #7a5a3a; }
   .plank::before { left: 7px; } .plank::after { right: 7px; }
-  .hop { display: flex; justify-content: center; gap: 2px; font-size: 118px; line-height: .95; margin-top: 4px; }
+  .hop { display: flex; justify-content: center; gap: 2px; font-size: 104px; line-height: .95; margin-top: 4px; }
   .hop span { display: inline-block; background: linear-gradient(180deg, #fff6b8 0%, #ffcf5a 48%, #f08a2c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 6px #6a2f10; paint-order: stroke fill; animation: bob 1.5s ease-in-out infinite; }
   .hop span:nth-child(2) { animation-delay: .18s; } .hop span:nth-child(3) { animation-delay: .36s; }
   @keyframes bob { 0%,100% { transform: translateY(0) scale(1,1); } 45% { transform: translateY(-14px) scale(.95,1.06); } 80% { transform: translateY(0) scale(1.08,.9); } }
@@ -78,9 +90,9 @@
   .row { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; align-items: center; }
   .stack { display: flex; flex-direction: column; align-items: center; gap: 12px; }
   h2.disp { font-size: 36px; margin: 0 0 6px; color: #fff; text-shadow: 0 3px 0 #1b4a3a, 0 6px 12px rgba(0,10,30,.6); }
-  .joke { font-size: 17px; max-width: 280px; color: #fff3d0; margin: 4px 0 14px; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,10,30,.7); }
   #over { justify-content: space-between; padding-top: calc(34px + var(--inset-top)); background: linear-gradient(180deg, rgba(10,24,40,.66) 0%, rgba(10,24,40,.4) 52%, rgba(10,24,40,0) 66%); }
-  #over h2 { font-size: 32px; white-space: nowrap; }
+  #over h2 { font-size: 32px; white-space: nowrap; margin-bottom: 10px; }
+  #over .best { font-size: 14px; margin-top: 8px; white-space: nowrap; }
   .otop { display: flex; flex-direction: column; align-items: center; }
   .obot { padding-bottom: 0; gap: 10px; }
   .stats { display: flex; gap: 8px; margin-top: 4px; width: 100%; max-width: 330px; }
@@ -91,6 +103,7 @@
   .stat b { font-family: 'Bevan', serif; font-weight: 400; font-size: 1.7em; color: #fff; margin-left: 8px; text-transform: none; }
   .badge { display: inline-block; background: linear-gradient(180deg, #ffe08c, #f4a43a); color: #5a2a08; font-family: 'Bevan', serif; font-size: 16px; padding: 3px 12px; border-radius: 20px; margin: 6px 0 2px; animation: pop .6s cubic-bezier(.2,1.6,.4,1) both; transform: rotate(-3deg); }
   @keyframes pop { from { transform: scale(0) rotate(-12deg); } to { transform: scale(1) rotate(-3deg); } }
+  #title .best { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(68px + var(--inset-bot)); margin: 0; white-space: nowrap; font-size: 15px; }
   .best { font-size: 16px; color: #fff3d0; margin-top: 14px; text-shadow: 0 2px 4px rgba(5,15,30,.8); background: rgba(10,24,40,.55); border-radius: 14px; padding: 4px 12px; }
   .best:empty { display: none; }
   .best b { color: var(--sun); }
@@ -103,6 +116,33 @@
   .unlock small { font-size: 13px; color: #d6f3e4; }
   .nexthat { font-size: 14px; color: #cfe3da; margin-top: 6px; text-shadow: 0 2px 4px rgba(5,15,30,.8); }
   .goalline b { font-family: 'Bevan', serif; font-weight: 400; color: var(--sun); }
+  .ovrow { display: flex; gap: 8px; align-items: center; width: 100%; max-width: 336px; margin-top: 2px; }
+  .ovcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; }
+  .ovcol .stats { margin-top: 0; flex-direction: column; gap: 7px; }
+  .ovcol .card { text-align: left; padding: 4px 10px 5px; }
+  .ovcol .card b { font-size: 21px; }
+  .ovcol .card small { display: block; font-size: 12px; color: #fff0a0; white-space: nowrap; }
+  .ovcol .badge { align-self: center; font-size: 15px; white-space: nowrap; margin-top: 8px; }
+  .ovcol .unlock { font-size: 14px; padding: 5px 8px; margin-top: 8px; line-height: 1.2; }
+  .ovcol .unlock small { font-size: 12px; }
+  #over .goalline { font-size: 17px; margin-top: 8px; }
+  /* game-over trail: the whole climb, lot at the bottom. Zone names left; summit, best flag and this run (hat-coloured) right */
+  .trail { position: relative; width: 168px; height: 262px; flex: none; }
+  .trail i, .trail b { position: absolute; display: block; font-style: normal; }
+  .tb-line { left: 70px; width: 6px; border-radius: 3px; background: rgba(255,248,232,.28); }
+  .tb-fill { left: 70px; width: 6px; border-radius: 3px; box-shadow: 0 0 0 1.5px rgba(10,24,40,.6); }
+  .tb-z { left: 66px; width: 14px; height: 2px; margin-bottom: -1px; background: rgba(255,248,232,.4); }
+  .tb-z.on { background: rgba(255,248,232,.85); }
+  .tb-zl { right: 108px; font-size: 13px; line-height: 14px; margin-bottom: -7px; color: rgba(255,248,232,.5); white-space: nowrap; font-weight: 700; }
+  .tb-zl.on { color: #fff8e8; }
+  .tb-lot { color: #cfe3da; font-size: 11px; letter-spacing: .6px; right: 92px; }
+  .tb-sum { left: 62px; width: 22px; height: 4px; margin-bottom: -2px; background: #ffd84a; border-radius: 2px; box-shadow: 0 0 0 1.5px rgba(40,26,12,.7); }
+  .tb-best { left: 80px; width: 15px; height: 11px; margin-bottom: 0; background: #f4efe2; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+  .tb-run { left: 64px; width: 18px; height: 18px; margin-bottom: -9px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px rgba(10,24,40,.7), 0 2px 8px rgba(0,0,0,.4); }
+  .tb-ml { left: 98px; font-size: 13px; line-height: 14px; margin-bottom: -7px; white-space: nowrap; text-shadow: 0 1px 3px rgba(5,15,30,.9); }
+  .tb-suml { color: #ffd84a; }
+  .tb-bestl { color: #f4efe2; }
+  .tb-runl { color: #fff; font-size: 15px; line-height: 16px; margin-bottom: -8px; font-weight: 800; }
   .footrow { position: absolute; left: 0; right: 0; bottom: calc(14px + var(--inset-bot)); display: flex; justify-content: center; align-items: center; gap: 10px; }
   .pill { font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 800; font-size: 15px; letter-spacing: .5px; color: var(--ink); background: rgba(31,48,60,.55); border: 2px solid rgba(255,248,232,.7); border-radius: 22px; height: 42px; padding: 0 16px; cursor: pointer; touch-action: manipulation; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
   .pill:active { transform: scale(.95); }
@@ -157,17 +197,20 @@
   <section id="over" class="screen">
     <div class="otop">
       <h2 class="disp">BACK AT THE LOT</h2>
-      <div class="joke" id="ovJoke">Back at the parking lot with everyone else who underestimated the hike.</div>
-      <div class="stats">
-        <div class="card"><span>HEIGHT</span><b id="ovH">0 m</b></div>
-        <div class="card"><span>SCORE</span><b id="ovS">0</b></div>
-        <div class="card"><span>BEST CHAIN</span><b id="ovC">0</b></div>
+      <div class="ovrow">
+        <div class="trail" id="ovTrail" aria-hidden="true"></div>
+        <div class="ovcol">
+          <div class="stats">
+            <div class="card"><span>HEIGHT</span><b id="ovH">0 m</b></div>
+            <div class="card"><span>STREAK</span><b id="ovC">0</b></div>
+            <div class="card"><span>SCORE</span><b id="ovS">0</b><small id="ovBank" style="display:none"></small></div>
+          </div>
+          <div class="badge" id="ovBadge" style="display:none">NEW BEST!</div>
+          <div class="unlock" id="ovUnlock" style="display:none"></div>
+        </div>
       </div>
-      <div class="badge" id="ovBadge" style="display:none">NEW BEST!</div>
-      <div class="goalline" id="ovGoal"></div>
-      <div class="unlock" id="ovUnlock" style="display:none"></div>
-      <div class="nexthat" id="ovNext"></div>
       <div class="best" id="ovBest"></div>
+      <div class="goalline" id="ovGoal"></div>
     </div>
     <div class="stack obot">
       <button class="btn big" id="ovRetry">HOP AGAIN</button>

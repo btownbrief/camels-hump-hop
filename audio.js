@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   const KEY = 'chh.audio';
+  const clampStep = (s, n) => Math.max(0, Math.min(n, Math.floor(s) || 0));
   const Snd = {
     ctx: null, master: null, sfxGain: null, musicGain: null, sfxOn: true, musicOn: true, started: false,
     _noiseBuf: null, _timer: null, _next: 0, _step: 0, zoneIdx: 0,
@@ -51,7 +52,7 @@
     },
 
     ladder: [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28, 31],
-    pitch(step) { const s = this.ladder[Math.min(step, this.ladder.length - 1)]; return 392 * Math.pow(2, s / 12); },
+    pitch(step) { const s = this.ladder[clampStep(step, this.ladder.length - 1)]; return 392 * Math.pow(2, s / 12); },
 
     bounce(v) { const f = 210 + (v || 0) * 70; this.tone(f, 0.12, 'sine', 0.18, f * 1.9); this.noise(0.05, 0.05, 1500, 'bandpass'); },
     combo(chain) {                                // rising pentatonic per chain step
@@ -74,6 +75,9 @@
     over() { [392, 330, 262, 196].forEach((f, i) => this.tone(f, 0.34, 'triangle', 0.18, 0, i * 0.18 + 0.1)); },
     click() { this.tone(660, 0.05, 'triangle', 0.12); },
     perfect(chain) { const f = 1568 * Math.pow(2, Math.min(chain || 0, 8) / 24); this.tone(f, 0.09, 'sine', 0.12); this.tone(f * 1.5, 0.14, 'sine', 0.07, 0, 0.05); },
+    mark() { this.tone(1046.5, 0.18, 'sine', 0.08); this.tone(1568, 0.26, 'sine', 0.06, 0, 0.08); },              // every 500 m: a soft chime
+    summit() { this.newBest(); [0, 4, 7, 12].forEach((s, i) => this.tone(1046.5 * Math.pow(2, s / 12), 0.3, 'sine', 0.07, 0, 0.42 + i * 0.07)); },   // the summit: the two-note sting, then a high sparkle
+    newBest() { this.tone(659.25, 0.16, 'triangle', 0.16); this.tone(987.77, 0.32, 'triangle', 0.16, 0, 0.12); },   // passing your best flag: a rising two-note sting
     tick(k) { this.tone(1400 - (k || 0) * 120, 0.045, 'square', 0.05); },               // chain about to run out
     bank(chain) { const f = this.pitch(Math.min(chain || 2, 10)); this.tone(f, 0.12, 'triangle', 0.14); this.tone(f * 1.5, 0.22, 'triangle', 0.14, 0, 0.09); },
 
